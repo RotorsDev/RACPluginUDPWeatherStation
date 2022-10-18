@@ -6,14 +6,15 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{DDD2FEA8-801E-463B-8913-9CCCDA2D9429}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>MissionPlanner.Skeleton_rename_me</RootNamespace>
-    <AssemblyName>MissionPlanner.Skeleton_rename_me</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <RootNamespace>UDPWeatherStation</RootNamespace>
+    <AssemblyName>UDPWeatherStation</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -58,7 +59,11 @@
       <Project>{13d2ec90-c41f-48a1-aada-859b6dc24edc}</Project>
       <Name>MAVLink</Name>
     </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)MissionPlanner.csproj">
+    <ProjectReference Include="..\..\MissionPlanner.csproj">
+      <Project>{a2e22272-95fe-47b6-b050-9ae7e2055bf5}</Project>
+      <Name>MissionPlanner</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\daniel.szilagyi\Documents\GitHub\MissionPlanner\MissionPlanner.csproj">
       <Project>{a2e22272-95fe-47b6-b050-9ae7e2055bf5}</Project>
       <Name>MissionPlanner</Name>
     </ProjectReference>
@@ -92,7 +97,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="UDPWeatherStation.cs" />
+    <Compile Include="UDPWeatherStationPlugin.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="OpenTK, Version=3.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
