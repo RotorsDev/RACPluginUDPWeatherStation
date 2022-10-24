@@ -15,11 +15,15 @@ using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Reflection;
+using log4net;
 
 namespace UDPWeatherStation
 {
     public class UDPWeatherStationPlugin : Plugin
     {
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private int PORT;
         private IPEndPoint iPEndPoint;
         private UdpClient udpClient;
@@ -219,7 +223,17 @@ namespace UDPWeatherStation
 
             // Process message
             Console.WriteLine($"UDP broadcast on port {PORT}: {message}");
+            LogMessage(message);
             DisplayMessage(message);
+        }
+
+        private void LogMessage(string message)
+        {
+            // Log in csv format
+            string logLine = $"\"{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}\"";
+            foreach (string item in message.Split('|'))
+                logLine += $",\"{item}\"";
+            log.Info(logLine);
         }
 
         private void DisplayMessage(string message)
