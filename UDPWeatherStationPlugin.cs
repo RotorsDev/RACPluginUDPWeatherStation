@@ -59,14 +59,14 @@ namespace UDPWeatherStation
 
         //[DebuggerHidden]
         public override bool Init()
-		//Init called when the plugin dll is loaded
+		// Init called when the plugin dll is loaded
         {
-            loopratehz = 1;  //Loop runs every second (The value is in Hertz, so 2 means every 500ms, 0.1f means every 10 second...)
+            loopratehz = 1;  // Loop runs every second (The value is in Hertz, so 2 means every 500ms, 0.1f means every 10 second...)
             return true;	 // If it is false then plugin will not load
         }
 
         public override bool Loaded()
-        //Loaded called after the plugin dll successfully loaded
+        // Loaded called after the plugin dll successfully loaded
         {
             MainV2.instance.BeginInvoke((MethodInvoker)(() =>
             {
@@ -99,6 +99,7 @@ namespace UDPWeatherStation
                 disconnectedLabel.Padding = new Padding(5);
                 flowPanel.Controls.Add(disconnectedLabel);
 
+                // Setup wind arrow picture
                 pBoxArrow = new PictureBox();
                 pBoxArrow.Name = "pictureBoxArrow";
                 pBoxArrow.Width = flowPanel.ClientSize.Width;
@@ -114,8 +115,8 @@ namespace UDPWeatherStation
                 {
                     //("Station direction", 0, "°"),
                     ("Wind speed", 1, "m/s"),
-                    ("Air pressure", 3, "millibar"),
                     ("Wind direction", 2, "°"), // Wind direction arrow uses the Name value from here!
+                    ("Air pressure", 3, "mBar"),
                     //("Internal temperature", 4, "°C"),
                     ("Humidity", 5, "%"),
                     ("External temperature", 6, "°C"),
@@ -160,28 +161,6 @@ namespace UDPWeatherStation
                 udpClient = new UdpClient(PORT);
                 udpClient.BeginReceive(new AsyncCallback(PorcessMessage), null);
                 connectionTimeout = TimeSpan.FromSeconds(2);
-
-                /*
-                // test what exists at this point
-                string message = "";
-                if (!Settings.Instance.ContainsKey("tabcontrolactions"))
-                    message += Environment.NewLine + "1. No tabcontrolactions key in XML";
-                else
-                    message += Environment.NewLine + "1. Tabcontrolactions key in XML";
-                if (!Settings.Instance.GetList("tabcontrolactions").Contains(tabPage.Name))
-                    message += Environment.NewLine + $"2. No {tabPage.Name} in XML";
-                else
-                    message += Environment.NewLine + $"2. {tabPage.Name} in XML";
-                if (!Host.MainForm.FlightData.TabListOriginal.Contains(tabPage))
-                    message += Environment.NewLine + $"3. No {tabPage.Name} in TabListOriginal";
-                else
-                    message += Environment.NewLine + $"3. {tabPage.Name} in TabListOriginal";
-                if (!Host.MainForm.FlightData.tabControlactions.TabPages.Contains(tabPage))
-                    message += Environment.NewLine + $"4. No {tabPage.Name} in UI";
-                else
-                    message += Environment.NewLine + $"4. {tabPage.Name} in UI";
-                if (!string.IsNullOrEmpty(message)) CustomMessageBox.Show($"Plugin.Loaded:{message}");
-                */
                 neverConnected = true;
             }));
 
@@ -200,13 +179,16 @@ namespace UDPWeatherStation
         }
 
         public override bool Loop()
-		//Loop is called in regular intervalls (set by loopratehz)
+		// Loop is called in regular intervalls (set by loopratehz)
         {
             if (DateTime.Now.Subtract(lastWeatherUpdate) > connectionTimeout)
                 DisplayDisconnectedMessage();
             return true;	//Return value is not used
         }
 
+        /// <summary>
+        /// UDP Client callback function
+        /// </summary>
         private void PorcessMessage(IAsyncResult result)
         {
             // Get message
@@ -215,7 +197,7 @@ namespace UDPWeatherStation
             // Restart listener
             udpClient.BeginReceive(new AsyncCallback(PorcessMessage), null);
 
-            // save update time
+            // Save update time
             lastWeatherUpdate = DateTime.Now;
 
             // Flip bool for first message
@@ -227,6 +209,10 @@ namespace UDPWeatherStation
             DisplayMessage(message);
         }
 
+        /// <summary>
+        /// Log received UDP broadcast message
+        /// </summary>
+        /// <param name="message">Received UDP broadcast message</param>
         private void LogMessage(string message)
         {
             // Log in csv format
@@ -236,6 +222,10 @@ namespace UDPWeatherStation
             log.Info(logLine);
         }
 
+        /// <summary>
+        /// Put received UDP broadcast message to the UI
+        /// </summary>
+        /// <param name="message">Received UDP broadcast message</param>
         private void DisplayMessage(string message)
         {
             MainV2.instance.BeginInvoke((MethodInvoker)(() =>
@@ -244,12 +234,12 @@ namespace UDPWeatherStation
                 .Replace('.', (0.1).ToString()[1])
                 .Replace(',', (0.1).ToString()[1]); // suck it invariant culture!
 
+                // Update table data
                 for (int i = 0; i < weatherTable.RowCount; i++)
                 {
-                    table.GetControlFromPosition(1, i).Text =
-                        i == 0 ?
-                            $"{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}":
-                            $"{Math.Round(double.Parse(message.Split('|')[tableConfig[i - 1].Index]), 2)}{tableConfig[i - 1].Unit}";
+                    weatherTable.GetControlFromPosition(1, i).Text = i == 0 ?
+                        $"{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}":
+                        $"{Math.Round(double.Parse(message.Split('|')[tableConfig[i - 1].Index]), 2)} {tableConfig[i - 1].Unit}";
                 }
 
                 // Update wind arrow
@@ -272,10 +262,14 @@ namespace UDPWeatherStation
             }));
         }
 
+        /// <summary>
+        /// Dsiplay message on UI when connection to the weather station has been lost for the set time
+        /// </summary>
         private void DisplayDisconnectedMessage()
         {
             MainV2.instance.BeginInvoke((MethodInvoker)(() =>
             {
+                // Update disnonnected message label
                 string msg = "Weather station disconnected";
                 if (neverConnected) // Hide arrow and table if no initial data
                 {
@@ -285,6 +279,7 @@ namespace UDPWeatherStation
                 else msg += $" ({(int)DateTime.Now.Subtract(lastWeatherUpdate).TotalSeconds}s ago)";
                 disconnectedLabel.Text = msg;
 
+                // Change control visibility & refresh
                 disconnectedLabel.Show();
                 //pBoxArrow.Hide();
                 //weatherTable.Hide();
@@ -293,9 +288,9 @@ namespace UDPWeatherStation
         }
 
         public override bool Exit()
-		//Exit called when plugin is terminated (usually when Mission Planner is exiting)
+		// Exit called when plugin is terminated (usually when Mission Planner is exiting)
         {
-            return true;	//Return value is not used
+            return true;	// Return value is not used
         }
     }
 }
