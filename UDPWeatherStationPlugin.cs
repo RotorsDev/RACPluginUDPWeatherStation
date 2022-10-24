@@ -28,6 +28,7 @@ namespace UDPWeatherStation
 
         private List<(string Name, int Index, string Unit)> tableConfig;
         private Image imageOriginal;
+        private bool neverConnected;
 
         private Label disconnectedLabel;
         private PictureBox pBoxArrow;
@@ -155,7 +156,6 @@ namespace UDPWeatherStation
                 udpClient = new UdpClient(PORT);
                 udpClient.BeginReceive(new AsyncCallback(PorcessMessage), null);
                 connectionTimeout = TimeSpan.FromSeconds(2);
-                lastWeatherUpdate = DateTime.Now;
 
                 /*
                 // test what exists at this point
@@ -178,6 +178,7 @@ namespace UDPWeatherStation
                     message += Environment.NewLine + $"4. {tabPage.Name} in UI";
                 if (!string.IsNullOrEmpty(message)) CustomMessageBox.Show($"Plugin.Loaded:{message}");
                 */
+                neverConnected = true;
             }));
 
             return true;     //If it is false plugin will not start (loop will not called)
@@ -212,6 +213,9 @@ namespace UDPWeatherStation
 
             // save update time
             lastWeatherUpdate = DateTime.Now;
+
+            // Flip bool for first message
+            neverConnected = false;
 
             // Process message
             Console.WriteLine($"UDP broadcast on port {PORT}: {message}");
@@ -258,7 +262,14 @@ namespace UDPWeatherStation
         {
             MainV2.instance.BeginInvoke((MethodInvoker)(() =>
             {
-                disconnectedLabel.Text = $"Weather station disconnected ({(int)DateTime.Now.Subtract(lastWeatherUpdate).TotalSeconds}s ago)";
+                string msg = "Weather station disconnected";
+                if (neverConnected) // Hide arrow and table if no initial data
+                {
+                    pBoxArrow.Hide();
+                    weatherTable.Hide();
+                }
+                else msg += $" ({(int)DateTime.Now.Subtract(lastWeatherUpdate).TotalSeconds}s ago)";
+                disconnectedLabel.Text = msg;
 
                 disconnectedLabel.Show();
                 //pBoxArrow.Hide();
