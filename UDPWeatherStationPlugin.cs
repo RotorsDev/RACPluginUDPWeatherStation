@@ -27,8 +27,10 @@ namespace UDPWeatherStation
         private DateTime lastWeatherUpdate;
 
         private List<(string Name, int Index, string Unit)> tableConfig;
+        private Image imageOriginal;
 
         private Label disconnectedLabel;
+        private PictureBox pBoxArrow;
         private TableLayoutPanel weatherTable;
         private FlowLayoutPanel flowPanel;
         private TabPage tabPage;
@@ -92,14 +94,23 @@ namespace UDPWeatherStation
                 disconnectedLabel.Padding = new Padding(5);
                 flowPanel.Controls.Add(disconnectedLabel);
 
-                tableConfig = new List<(string, int, string)>
+                pBoxArrow = new PictureBox();
+                pBoxArrow.Name = "pictureBoxArrow";
+                pBoxArrow.Width = flowPanel.ClientSize.Width;
+                pBoxArrow.Height = 128;
+                pBoxArrow.SizeMode = PictureBoxSizeMode.Zoom;
+                pBoxArrow.Image = UDPWeatherStation.Properties.Resources.arrow;
+                imageOriginal = pBoxArrow.Image; // Save 0 rotation image
+                flowPanel.Controls.Add(pBoxArrow);
+
                 // Setup data table
                 // állomás iránya (nem kell) | szélsebesség 'm/s' | szélirány '°' | légnyomás 'miliBar' | belső hőmérséklet (nem kell) | páratartalom '%' | hőmérséklet '°C' | akksifesz 'Volt' |
+                tableConfig = new List<(string, int, string)> // Comment out not needed values
                 {
                     //("Station direction", 0, "°"),
                     ("Wind speed", 1, "m/s"),
-                    ("Wind direction", 2, "°"),
                     ("Air pressure", 3, "millibar"),
+                    ("Wind direction", 2, "°"), // Wind direction arrow uses the Name value from here!
                     //("Internal temperature", 4, "°C"),
                     ("Humidity", 5, "%"),
                     ("External temperature", 6, "°C"),
@@ -223,7 +234,21 @@ namespace UDPWeatherStation
                             $"{Math.Round(double.Parse(message.Split('|')[tableConfig[i - 1].Index]), 2)}{tableConfig[i - 1].Unit}";
                 }
 
+                // Update wind arrow
+                Bitmap rotatedBmp = new Bitmap(imageOriginal.Width, imageOriginal.Height);
+                rotatedBmp.SetResolution(imageOriginal.HorizontalResolution, imageOriginal.VerticalResolution);
+                Graphics graphics = Graphics.FromImage(rotatedBmp);
+                graphics.TranslateTransform(rotatedBmp.Width / 2, rotatedBmp.Height / 2);
+                int index = tableConfig.Where(item => item.Name.Contains("Wind direction")).FirstOrDefault().Index;
+                float newAngle = float.Parse(message.Split('|')[index]);
+                graphics.RotateTransform(newAngle);
+                graphics.TranslateTransform(-(rotatedBmp.Width / 2), -(rotatedBmp.Height / 2));
+                graphics.DrawImage(imageOriginal, new PointF(0, 0));
+                pBoxArrow.Image = rotatedBmp;
+
+                // Change control visibility & refresh
                 disconnectedLabel.Hide();
+                pBoxArrow.Show();
                 weatherTable.Show();
                 flowPanel.Refresh();
             }));
@@ -236,6 +261,7 @@ namespace UDPWeatherStation
                 disconnectedLabel.Text = $"Weather station disconnected ({(int)DateTime.Now.Subtract(lastWeatherUpdate).TotalSeconds}s ago)";
 
                 disconnectedLabel.Show();
+                //pBoxArrow.Hide();
                 //weatherTable.Hide();
                 flowPanel.Refresh();
             }));
