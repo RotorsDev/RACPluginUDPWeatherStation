@@ -29,8 +29,8 @@ namespace UDPWeatherStation
         private List<(string Name, int Index, string Unit)> tableConfig;
 
         private Label disconnectedLabel;
-        private TableLayoutPanel table;
-        private SplitContainer splitContainer;
+        private TableLayoutPanel weatherTable;
+        private FlowLayoutPanel flowPanel;
         private TabPage tabPage;
 
         #region Plugin info
@@ -63,17 +63,37 @@ namespace UDPWeatherStation
         {
             MainV2.instance.BeginInvoke((MethodInvoker)(() =>
             {
-                // Create label
+                // Setup tabpage
+                tabPage = new TabPage();
+                tabPage.Name = "tabWeather";
+                tabPage.Text = "Weather";
+                int index = 1;
+                List<string> list = Settings.Instance.GetList("tabcontrolactions").ToList();
+                list.Insert(index, "tabWeather");
+                Settings.Instance.SetList("tabcontrolactions", list);
+                Host.MainForm.FlightData.TabListOriginal.Insert(index, tabPage);
+                Host.MainForm.FlightData.tabControlactions.TabPages.Insert(index, tabPage);
+
+                // Setup flow panel
+                flowPanel = new FlowLayoutPanel();
+                flowPanel.Name = "flowPanelWeather";
+                flowPanel.FlowDirection = FlowDirection.TopDown;
+                flowPanel.AutoSize = true;
+                flowPanel.Dock = DockStyle.Fill;
+                tabPage.Controls.Add(flowPanel);
+
+                // Setup disonnected message label
                 disconnectedLabel = new Label();
                 disconnectedLabel.Name = "labelDisconnected";
                 disconnectedLabel.Text = "disconnected";
-                disconnectedLabel.TextAlign = ContentAlignment.TopLeft;
-                disconnectedLabel.Dock = DockStyle.Fill;
-                disconnectedLabel.Padding = new Padding(3);
+                disconnectedLabel.TextAlign = ContentAlignment.MiddleCenter;
+                disconnectedLabel.Width = flowPanel.ClientSize.Width;
+                disconnectedLabel.Padding = new Padding(5);
+                flowPanel.Controls.Add(disconnectedLabel);
 
-                // Create table
-                // állomás iránya (nem kell), szélsebesség 'm/s', szélirány '°', légnyomás 'miliBar', belső hőmérséklet (nem kell), páratartalom '%', hőmérséklet '°C', akksifesz 'Volt'
                 tableConfig = new List<(string, int, string)>
+                // Setup data table
+                // állomás iránya (nem kell) | szélsebesség 'm/s' | szélirány '°' | légnyomás 'miliBar' | belső hőmérséklet (nem kell) | páratartalom '%' | hőmérséklet '°C' | akksifesz 'Volt' |
                 {
                     //("Station direction", 0, "°"),
                     ("Wind speed", 1, "m/s"),
@@ -84,59 +104,38 @@ namespace UDPWeatherStation
                     ("External temperature", 6, "°C"),
                     ("Battery voltage", 7, "V")
                 };
-                table = new TableLayoutPanel();
-                table.Name = "tableWeather";
-                table.Dock = DockStyle.Top;
-                table.Width = Host.MainForm.FlightData.tabControlactions.Width;
-                table.AutoSize = true;
-                table.AutoSizeMode = AutoSizeMode.GrowOnly;
-                table.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
-                table.ColumnCount = 2;
-                table.RowCount = tableConfig.Count + 1; // +1 row for time
-                for (int i = 0; i < table.RowCount; i++)
+                weatherTable = new TableLayoutPanel();
+                weatherTable.Name = "tableWeather";
+                weatherTable.ColumnCount = 2;
+                weatherTable.RowCount = tableConfig.Count + 1; // +1 row for time
+                for (int i = 0; i < weatherTable.RowCount; i++)
                 {
                     Label l1 = new Label();
-                    l1.Dock = DockStyle.Fill;
-                    l1.AutoSize = true;
-                    l1.Padding = new Padding(3);
-                    l1.TextAlign = ContentAlignment.MiddleRight;
                     l1.Text = i == 0 ? "Time" : tableConfig[i - 1].Name;
-                    table.Controls.Add(l1, 0, i);
+                    l1.TextAlign = ContentAlignment.MiddleRight;
+                    l1.Padding = new Padding(5);
+                    l1.AutoSize = true;
+                    l1.Dock = DockStyle.Fill;
+                    weatherTable.Controls.Add(l1, 0, i);
 
                     Label l2 = new Label();
-                    l2.Dock = DockStyle.Fill;
-                    l2.AutoSize = true;
-                    l2.Padding = new Padding(3);
-                    l2.TextAlign = ContentAlignment.MiddleLeft;
                     l2.Text = i == 0 ? string.Empty : $"{Math.Round(0d, 2)} {tableConfig[i - 1].Unit}";
-                    table.Controls.Add(l2, 1, i);
+                    l2.TextAlign = ContentAlignment.MiddleLeft;
+                    l2.Padding = new Padding(5);
+                    l2.AutoSize = true;
+                    l2.Dock = DockStyle.Fill;
+                    weatherTable.Controls.Add(l2, 1, i);
                 }
+                weatherTable.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
+                weatherTable.Width = flowPanel.ClientSize.Width;
+                for (int i = 0; i < weatherTable.ColumnCount; i++)
+                    weatherTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / weatherTable.ColumnCount));
+                weatherTable.Height = weatherTable.RowCount * ((new Label()).Height + 1) + 1;
+                flowPanel.Controls.Add(weatherTable);
 
-                // Create splitcontainer
-                splitContainer = new SplitContainer();
-                splitContainer.Name = "splitContainerWeather";
-                splitContainer.Orientation = Orientation.Horizontal;
-                splitContainer.IsSplitterFixed = true;
-                splitContainer.SplitterDistance = disconnectedLabel.Height;
-                splitContainer.Dock = DockStyle.Fill;
-                splitContainer.Panel1.Controls.Add(disconnectedLabel);
-                splitContainer.Panel1Collapsed = true;
-                splitContainer.Panel2.Controls.Add(table);
-
-                // Create tabpage
-                tabPage = new TabPage();
-                tabPage.Name = "tabWeather";
-                tabPage.Text = "Weather";
-                tabPage.Controls.Add(splitContainer);
+                // Refresh UI
                 ThemeManager.ApplyThemeTo(tabPage);
-
-                // Add tab to places
-                int index = 1;
-                List<string> list = Settings.Instance.GetList("tabcontrolactions").ToList();
-                list.Insert(index, "tabWeather");
-                Settings.Instance.SetList("tabcontrolactions", list);
-                Host.MainForm.FlightData.TabListOriginal.Insert(index, tabPage);
-                Host.MainForm.FlightData.tabControlactions.TabPages.Insert(index, tabPage);
+                flowPanel.Refresh();
 
                 // Setup UDP broadcast listener
                 PORT = 3333;
@@ -204,7 +203,7 @@ namespace UDPWeatherStation
                 .Replace('.', (0.1).ToString()[1])
                 .Replace(',', (0.1).ToString()[1]); // suck it invariant culture!
 
-                for (int i = 0; i < table.RowCount; i++)
+                for (int i = 0; i < weatherTable.RowCount; i++)
                 {
                     table.GetControlFromPosition(1, i).Text =
                         i == 0 ?
@@ -212,7 +211,9 @@ namespace UDPWeatherStation
                             $"{Math.Round(double.Parse(message.Split('|')[tableConfig[i - 1].Index]), 2)}{tableConfig[i - 1].Unit}";
                 }
 
-                if (!splitContainer.Panel1Collapsed) splitContainer.Panel1Collapsed = true;
+                disconnectedLabel.Hide();
+                weatherTable.Show();
+                flowPanel.Refresh();
             }));
         }
 
@@ -221,7 +222,10 @@ namespace UDPWeatherStation
             MainV2.instance.BeginInvoke((MethodInvoker)(() =>
             {
                 disconnectedLabel.Text = $"Weather station disconnected ({(int)DateTime.Now.Subtract(lastWeatherUpdate).TotalSeconds}s ago)";
-                if (splitContainer.Panel1Collapsed) splitContainer.Panel1Collapsed = false;
+
+                disconnectedLabel.Show();
+                //weatherTable.Hide();
+                flowPanel.Refresh();
             }));
         }
 
