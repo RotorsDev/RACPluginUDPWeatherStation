@@ -23,9 +23,9 @@ tabPage = new TabPage();
 tabPage.Name = "tabWeather";
 tabPage.Text = "Weather";
 int index = 1;
-List<string> list = Settings.Instance.GetList("tabcontrolactions").ToList();
+List<string> list = Host.config.GetList("tabcontrolactions").ToList();
 list.Insert(index, "tabWeather");
-Settings.Instance.SetList("tabcontrolactions", list);
+Host.config.SetList("tabcontrolactions", list);
 Host.MainForm.FlightData.TabListOriginal.Insert(index, tabPage);
 Host.MainForm.FlightData.tabControlactions.TabPages.Insert(index, tabPage);
 ```
@@ -41,6 +41,8 @@ IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Any, PORT);
 UdpClient udpClient = new UdpClient(PORT);
 udpClient.BeginReceive(new AsyncCallback(PorcessMessage), null);
 ```
+
+**Don't forget to enable the port on the machine this code runs on!**
 
 The callback function `PorcessMessage` then handles the incomming message.
 

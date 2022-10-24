@@ -53,7 +53,7 @@ namespace UDPWeatherStation
 
         public override string Author
         {
-            get { return "Daniel Szilagyi (LEGIONBOSS)"; }
+            get { return "Daniel Szilagyi"; }
         }
         #endregion
 
@@ -75,9 +75,9 @@ namespace UDPWeatherStation
                 tabPage.Name = "tabWeather";
                 tabPage.Text = "Weather";
                 int index = 1;
-                List<string> list = Settings.Instance.GetList("tabcontrolactions").ToList();
+                List<string> list = Host.config.GetList("tabcontrolactions").ToList();
                 list.Insert(index, "tabWeather");
-                Settings.Instance.SetList("tabcontrolactions", list);
+                Host.config.SetList("tabcontrolactions", list);
                 Host.MainForm.FlightData.TabListOriginal.Insert(index, tabPage);
                 Host.MainForm.FlightData.tabControlactions.TabPages.Insert(index, tabPage);
 
