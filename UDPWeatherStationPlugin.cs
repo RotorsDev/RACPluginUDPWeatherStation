@@ -159,7 +159,7 @@ namespace UDPWeatherStation
                 PORT = 3333;
                 iPEndPoint = new IPEndPoint(IPAddress.Any, PORT);
                 udpClient = new UdpClient(PORT);
-                udpClient.BeginReceive(new AsyncCallback(PorcessMessage), null);
+                udpClient.BeginReceive(new AsyncCallback(ProcessMessage), null);
                 connectionTimeout = TimeSpan.FromSeconds(2);
                 neverConnected = true;
             }));
@@ -189,13 +189,13 @@ namespace UDPWeatherStation
         /// <summary>
         /// UDP Client callback function
         /// </summary>
-        private void PorcessMessage(IAsyncResult result)
+        private void ProcessMessage(IAsyncResult result)
         {
             // Get message
             string message = Encoding.UTF8.GetString(udpClient.EndReceive(result, ref iPEndPoint));
 
             // Restart listener
-            udpClient.BeginReceive(new AsyncCallback(PorcessMessage), null);
+            udpClient.BeginReceive(new AsyncCallback(ProcessMessage), null);
 
             // Save update time
             lastWeatherUpdate = DateTime.Now;

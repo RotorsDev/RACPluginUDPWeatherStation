@@ -1,6 +1,6 @@
 # RACPluginUDPWeatherStation
 
-Plugin that listens to UDP boradcast messages from the weather station.
+Plugin that listens to UDP broadcast messages from the weather station.
 
  - Tab visibility can be set by right clicking on the tab header and selecting "**Customize**"
  - Plugins can be dis- and re-enabled on the **Plugin Manager** screen (**Ctrl+C**)
@@ -39,22 +39,22 @@ An (asynchronous) UDP listener is set up to listen on a set port number for broa
 int PORT = 3333;
 IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Any, PORT);
 UdpClient udpClient = new UdpClient(PORT);
-udpClient.BeginReceive(new AsyncCallback(PorcessMessage), null);
+udpClient.BeginReceive(new AsyncCallback(ProcessMessage), null);
 ```
 
 **Don't forget to enable the port on the machine this code runs on!**
 
-The callback function `PorcessMessage` then handles the incomming message.
+The callback function `ProcessMessage` then handles the incoming message.
 
 ```cs
 // UDP Client callback function
-private void PorcessMessage(IAsyncResult result)
+private void ProcessMessage(IAsyncResult result)
 {
     // Get message
     string message = Encoding.UTF8.GetString(udpClient.EndReceive(result, ref iPEndPoint));
 
     // Restart listener
-    udpClient.BeginReceive(new AsyncCallback(PorcessMessage), null);
+    udpClient.BeginReceive(new AsyncCallback(ProcessMessage), null);
 
     // Process message
     Console.WriteLine($"UDP broadcast on port {PORT}: {message}");
