@@ -80,6 +80,7 @@ namespace UDPWeatherStation
                 flowPanel.FlowDirection = FlowDirection.TopDown;
                 flowPanel.AutoSize = true;
                 flowPanel.Dock = DockStyle.Fill;
+                flowPanel.Resize += FlowPanel_Resize;
                 tabPage.Controls.Add(flowPanel);
 
                 // Setup disonnected message label
@@ -169,6 +170,17 @@ namespace UDPWeatherStation
             }));
 
             return true;     //If it is false plugin will not start (loop will not called)
+        }
+
+        private void FlowPanel_Resize(object sender, EventArgs e)
+        {
+            MainV2.instance.BeginInvoke((MethodInvoker)(() =>
+            {
+                // Adjust control widths in flowPanel
+                foreach (Control item in flowPanel.Controls)
+                    item.Width = flowPanel.ClientSize.Width;
+                flowPanel.Refresh();
+            }));
         }
 
         public override bool Loop()
