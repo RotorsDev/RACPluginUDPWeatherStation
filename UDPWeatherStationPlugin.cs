@@ -113,7 +113,7 @@ namespace UDPWeatherStation
                 // állomás iránya (nem kell) | szélsebesség 'm/s' | szélirány '°' | légnyomás 'miliBar' | belső hőmérséklet (nem kell) | páratartalom '%' | hőmérséklet '°C' | akksifesz 'Volt' |
                 tableConfig = new List<(string, int, string)> // Comment out not needed values
                 {
-                    //("Station direction", 0, "°"),
+                    //("Station heading", 0, "°"),
                     ("Wind speed", 1, "m/s"),
                     ("Wind direction", 2, "°"), // Wind direction arrow uses the Name value from here!
                     ("Air pressure", 3, "mBar"),
