@@ -114,8 +114,8 @@ namespace UDPWeatherStation
                 tableConfig = new List<(string, int, string)> // Comment out not needed values
                 {
                     //("Station heading", 0, "°"),
-                    ("Wind speed", 1, "m/s"),
-                    ("Wind direction", 2, "°"), // Wind direction arrow uses the Name value from here!
+                    ("Wind speed", 1, CurrentState.SpeedUnit),
+                    ("Wind direction", 2, "°"),
                     ("Air pressure", 3, "mBar"),
                     //("Internal temperature", 4, "°C"),
                     ("Humidity", 5, "%"),
@@ -237,9 +237,20 @@ namespace UDPWeatherStation
                 // Update table data
                 for (int i = 0; i < weatherTable.RowCount; i++)
                 {
-                    weatherTable.GetControlFromPosition(1, i).Text = i == 0 ?
-                        $"{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}":
-                        $"{Math.Round(double.Parse(message.Split('|')[tableConfig[i - 1].Index]), 2)} {tableConfig[i - 1].Unit}";
+                    string content;
+                    if (i == 0) // Time
+                    {
+                        content = $"{DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}";
+                    }
+                    else if (tableConfig[i - 1].Name.Contains("speed")) // Wind speed
+                    {
+                        content = $"{Math.Round(double.Parse(message.Split('|')[tableConfig[i - 1].Index]), 2) * CurrentState.multiplierspeed} {CurrentState.SpeedUnit}";
+                    }
+                    else
+                    {
+                        content = $"{Math.Round(double.Parse(message.Split('|')[tableConfig[i - 1].Index]), 2)} {tableConfig[i - 1].Unit}";
+                    }
+                    weatherTable.GetControlFromPosition(1, i).Text = content;
                 }
 
                 // Update wind arrow
