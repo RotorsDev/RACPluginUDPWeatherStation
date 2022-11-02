@@ -244,7 +244,7 @@ namespace UDPWeatherStation
                     }
                     else if (tableConfig[i - 1].Name.Contains("speed")) // Wind speed
                     {
-                        content = $"{Math.Round(double.Parse(message.Split('|')[tableConfig[i - 1].Index]), 2) * CurrentState.multiplierspeed} {CurrentState.SpeedUnit}";
+                        content = $"{Math.Round(double.Parse(message.Split('|')[tableConfig[i - 1].Index]) * CurrentState.multiplierspeed, 2)} {CurrentState.SpeedUnit}";
                     }
                     else
                     {
@@ -259,7 +259,7 @@ namespace UDPWeatherStation
                 Graphics graphics = Graphics.FromImage(rotatedBmp);
                 graphics.TranslateTransform(rotatedBmp.Width / 2, rotatedBmp.Height / 2);
                 int index = tableConfig.Where(item => item.Name.Contains("Wind direction")).FirstOrDefault().Index;
-                float newAngle = float.Parse(message.Split('|')[index]);
+                float newAngle = (float.Parse(message.Split('|')[index]) + 180) % 360; // Arrow points where the wind is blowing to
                 graphics.RotateTransform(newAngle);
                 graphics.TranslateTransform(-(rotatedBmp.Width / 2), -(rotatedBmp.Height / 2));
                 graphics.DrawImage(imageOriginal, new PointF(0, 0));
